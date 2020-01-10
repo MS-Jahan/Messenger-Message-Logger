@@ -45,7 +45,7 @@ def writeLogs(content, threadName, date):
 
 class CustomClient(Client):
     def onMessage(self, author_id, message_object, thread_id, thread_type, ts, metadata, msg, **kwargs):
-        
+        text = message_object.text
         if message_object.text == None:
             get_url = str(message_object.sticker)
             index1 = get_url.find("url")
