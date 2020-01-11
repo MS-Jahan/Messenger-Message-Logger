@@ -106,8 +106,9 @@ class CustomClient(Client):
         x = self.fetchMessageInfo(mid, thread_id)
         y = self.fetchUserInfo(x.author)[x.author]
         mess = x.text
-        if x.text == None:
-            mess = "Sticker"
+        
+        if mess == None or mess == "":
+            mess = "%Sticker, image or link%"
         content = "{} reacted {} to message ** {}: {} **".format(user.name, reaction.name, y.name, mess)
         bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) #DTA
         writeLogs(time.ctime() + " | " + content, thread.name, date)
