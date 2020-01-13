@@ -5,3 +5,4 @@ Logs when:
 - [x] New text message received.
 - [x] Someone sends images, gifs, stickers or any kind of attachment.
 - [x] Someones reacts or remove reaction.
+- [x] Someones changes thread (conversation) color/theme.
