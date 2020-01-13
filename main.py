@@ -9,7 +9,7 @@ from fbchat.models import *
 
 email = 'randomemail1@yahoo.com' #Facebook Email
 password = 'zxxcqwer1234zx' #Facebook Password
-USE_TELEGRAM = True #Change to True if you don't want to use Telegram
+USE_TELEGRAM = True #Change to False if you don't want to use Telegram
 
 if USE_TELEGRAM == True:
     import telepot 
