@@ -21,7 +21,7 @@ Logs when:
 - [x] Someones changes thread (conversation) name, color/theme, emoji.
 - [x] Someones changes nickname.
 - [x] New friend request is received.
-- [x] New video/audio call is started or someone joined call in group conversation.
+- [x] New video/audio call is started or someone joined call in group conversation. <i>(UNTESTED)</i>
 - [x] Someone adds or removes someone (as admin or general member) and toggles 'Require Admin Approval' in group conversation.
 - [x] Someone starts or stops typing in private chat.
 - [x] Any kind of poll or plan activity is happened. <i>(UNTESTED)</i>
