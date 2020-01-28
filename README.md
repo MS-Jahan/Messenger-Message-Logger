@@ -15,7 +15,7 @@ Logs Messenger messages, logs them on local storage and sends a copy via Telegra
 
 
 Logs when:
-- [x] New text message received.
+- [x] New text message received (normal message or replied message).
 - [x] Someone sends images, gifs, stickers or any kind of attachment.
 - [x] Someones reacts or remove reaction.
 - [x] Someones changes thread (conversation) name, color/theme, emoji.
@@ -24,3 +24,4 @@ Logs when:
 - [x] New video/audio call is started or someone joined call in group conversation.
 - [x] Someone adds or removes someone (as admin or general member) and toggles 'Require Admin Approval' in group conversation.
 - [x] Someone starts or stops typing in private chat.
+- [x] Any kind of poll or plan activity is happened. <i>(UNTESTED)</i>
