@@ -27,9 +27,8 @@ def writeLogs(content, threadName, date):
         None'''
     
     if type(threadName) == 'None' or threadName == None or threadName == 'None':
-        print("threadName is NONETYPE")
+        #print("threadName is NONETYPE")
         threadName = "UNTITLED"
-    
     
     try:
         os.makedirs("message_logs/" + threadName)
@@ -62,18 +61,31 @@ def writeLogs(content, threadName, date):
     if USE_TELEGRAM == True:
         bot.sendMessage(bot_chat_id, "### " + threadName + " ###" + "\n" + content) 
 
+def convertSeconds(seconds):
+    hours = int(seconds / 3600)
+    minutes = int((seconds % 3600) / 60)
+    seconds = (seconds % 3600) % 60
+    formattedTime = "{} hours, {} minutes, {} seconds".format(hours, minutes, seconds)
+    return formattedTime
 
 
 # for text, image, gif, attachment or sticker-type messages
 def getMessageContent(self, t, messageObject):
     #if len(message_object.attachments) != 0:
-
+    print(messageObject)
     if messageObject.text == None and messageObject.sticker == None:
         for i in range(0, len(messageObject.attachments)):
             #print(messageObject.attachments[i].animated_preview_url)
-            
-            # Checking if it is gif
-            if hasattr(messageObject.attachments[i], 'animated_preview_url') and messageObject.attachments[i].animated_preview_url != None:
+            # If attachment is a temporary location.
+            if hasattr(messageObject.attachments[i], 'latitude') and hasattr(messageObject.attachments[i], 'expiration_time'):
+                url = "https://www.google.com/maps/place/" + str(messageObject.attachments[i].latitude) + "," + str(messageObject.attachments[i].longitude)
+                t += "\nLive Location valid for " + convertSeconds(messageObject.attachment[i].expiration_time) + ": " + url
+            # If attachment is just a pinned location.
+            elif hasattr(messageObject.attachments[i], 'latitude') and hasattr(messageObject.attachments[i], 'longitude'):
+                url = "https://www.google.com/maps/place/" + str(messageObject.attachments[i].latitude) + "," + str(messageObject.attachments[i].longitude)
+                t += "\nPinned Location: " + url    
+            # If gif
+            elif hasattr(messageObject.attachments[i], 'animated_preview_url') and messageObject.attachments[i].animated_preview_url != None:
                 #if messageObject.attachments[i].animated_preview_url != None: #If gif
                 url = self.fetchImageUrl(messageObject.attachments[i].uid)
                 t += "\nGif: " + url
@@ -82,17 +94,20 @@ def getMessageContent(self, t, messageObject):
                 # content = "{}: {}".format(user.name, str(messageObject.attachments[i].animated_preview_url))
                 # bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
                 # writeLogs(time.ctime() + " | " + content, thread.name, date)
+            # If normal image
             elif hasattr(messageObject.attachments[i], 'large_preview_url') and messageObject.attachments[i].large_preview_url != None:
                 #elif messageObject.attachments[i].large_preview_url != None: #If normal image
                 url = self.fetchImageUrl(messageObject.attachments[i].uid)
                 t += "\nImage: " + url
                 #t+= str(messageObject.attachments[i].large_preview_url) + "\n\n"
                 #print("Image               " +t)
+            # If file attachment
             elif hasattr(messageObject.attachments[i], 'url') and messageObject.attachments[i].url != None:
                 #else: #If file rather than image (i.e. pdf, docx etc)
                 #if messageObject.attachments[i].url != None:
                 t += "\nFile: " + str(messageObject.attachments[i].url) + "\n\n"
                 #print("File               " +t)
+            # If video
             elif hasattr(messageObject.attachments[i], 'preview_url') and messageObject.attachments[i].preview_url != None:
                 url = messageObject.attachments[i].preview_url
                 t += "\nVideo: " + url
@@ -113,13 +128,6 @@ def getMessageContent(self, t, messageObject):
     
     return t
 
-def convertSeconds(seconds):
-    hours = int(seconds / 3600)
-    minutes = int((seconds % 3600) / 60)
-    seconds = (seconds % 3600) % 60
-    formattedTime = "{}:{}:{}".format(hours, minutes, seconds)
-    return formattedTime
-
 
 class CustomClient(Client):
     def onMessage(self, author_id, message_object, thread_id, thread_type, ts, metadata, msg, **kwargs):
@@ -129,17 +137,25 @@ class CustomClient(Client):
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         #print(len(message_object.attachments))
         #print("\n")
-        print(str(message_object) + "\n\n\n")
+        #print(str(message_object) + "\n\n\n")
         #print(message_object.attachments[0].large_preview_url)
         
         text = ''
         
         text = getMessageContent(self, text, message_object)
-      
-        content = "*{}*: {}".format(user.name, text)
-        #bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
-        return
+        content = ''
+        if message_object.replied_to != None:
+            reply = message_object.replied_to
+            replied_to = self.fetchUserInfo(reply.author)[reply.author]
+            text1 = ''
+            content += "{} has replied to {}'s message, \"{}\"\nReply: {}".format(user.name, replied_to.name, getMessageContent(self, text1, reply), text)
+            writeLogs(time.ctime() + " | " + content, thread.name, date)
+        else:
+            content += "*{}*: {}".format(user.name, text)
+            #bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
+            writeLogs(time.ctime() + " | " + content, thread.name, date)
+            #print("### " + thread.name + " ###" + "\n" + content)
+        
 
     def onReactionAdded(self, mid, reaction, author_id, thread_id, thread_type, ts, msg, **kwargs):
         date = datetime.now()
@@ -261,7 +277,7 @@ class CustomClient(Client):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        print("\n", added_ids, "\n\n")
+        #print("\n", added_ids, "\n\n")
         added_member_names = []
         for x in range(len(added_ids)):
             user0 = self.fetchUserInfo(added_ids[x])[added_ids[x]]
@@ -281,12 +297,13 @@ class CustomClient(Client):
         
     def onFriendRequest(self, from_id, msg, **kwargs):
         date = datetime.now()
-        user = self.fetchUserInfo(from_id)[from_id]
-        print(from_id)
-        print(user)
-        # content = "Friend request from {}".format(user.name)
-        # print(content)
-        # writeLogs(time.ctime() + " | " + content, thread.name, date)
+        user = self.fetchUserInfo(from_id)[str(from_id)]
+        #print(from_id)
+        #print(user)
+        content = "Friend request from {}".format(user.name)
+        #print(content)
+        threadName = 'Friend Request'
+        writeLogs(time.ctime() + " | " + content, threadName, date)
         
     '''def onInbox(self, unseen, unread, recent_unread, msg, **kwargs):
         print(unseen)
@@ -297,7 +314,7 @@ class CustomClient(Client):
     def onInbox(self, unseen, unread, recent_unread, msg, **kwargs):
         thread = self.fetchThreadList(self, limit=1, thread_location=models.ThreadLocation.PENDING)[0]
         msg = self.fetchThreadMessages(thread_id=thread.uid, limit=1)[0]
-        print(thread, msg)
+        #print(thread, msg)
         if not msg.is_read:
             self.onMessage(author_id=msg.author, message_object=msg, thread_id=thread.uid, thread_type=thread.type)    
         
@@ -307,7 +324,8 @@ class CustomClient(Client):
                 date = datetime.now()
                 user = self.fetchUserInfo(author_id)[author_id]
                 thread = self.fetchThreadInfo(thread_id)[thread_id]
-                content = "{} has {} typing.".format(user.name, status)
+                print(status)
+                content = "{} has {} typing.".format(user.name, status.name)
                 writeLogs(time.ctime() + " | " + content, thread.name, date)
         
     def onGamePlayed(self, mid, author_id, game_id, game_name, score, leaderboard, thread_id, thread_type, ts, metadata, msg, **kwargs):
@@ -322,7 +340,7 @@ class CustomClient(Client):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        print(author_id, thread_id)
+        #print(author_id, thread_id)
         content = "{} blocked you.".format(user.name)
         writeLogs(time.ctime() + " | " + content, thread.name, date)
         
@@ -337,7 +355,8 @@ class CustomClient(Client):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        
+        print(location)
+        print(msg)
         content = "{} shared a location: {}.".format(user.name, location.url)
         writeLogs(time.ctime() + " | " + content, thread.name, date)
         
