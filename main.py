@@ -48,12 +48,12 @@ def writeLogs(content, threadName, date):
         append_write = 'w' # make a new file if not
     try:
         with open(filename, mode = append_write, encoding='utf8') as write_in:
-            write_in.write(content)
+            write_in.write(content + "\n")
         #write_in = open(filename, append_write)
         write_in.close()
     except FileNotFoundError:
         with open(filename, mode = w, encoding='utf8') as write_in:
-            write_in.write(content)
+            write_in.write(content + "\n")
         #write_in = open(filename, append_write)
         write_in.close()
         
@@ -325,7 +325,7 @@ class CustomClient(Client):
                 user = self.fetchUserInfo(author_id)[author_id]
                 thread = self.fetchThreadInfo(thread_id)[thread_id]
                 print(status)
-                content = "{} has {} typing.".format(user.name, status.name)
+                content = "{}'s current typing status: {}.".format(user.name, status.name)
                 writeLogs(time.ctime() + " | " + content, thread.name, date)
         
     def onGamePlayed(self, mid, author_id, game_id, game_name, score, leaderboard, thread_id, thread_type, ts, metadata, msg, **kwargs):
@@ -450,19 +450,23 @@ class CustomClient(Client):
             content = "{} disagreed to take part in the plan '{}'.".format(user.name, plan.title)
         
         writeLogs(time.ctime() + " | " + content, thread.name, date) # Checking Needed ***********************
-    
+
+
+cookies = {}
 try:
-    with open("session.json") as f:
+    # Load the session cookies
+    with open('session.json', 'r') as f:
         cookies = json.load(f)
-    client = fbchat.Client(USER, PASSWORD, session_cookies=cookies)
-    print('Logging in using cookies...')
 except:
-    print('Cookies not found!')
-    client = CustomClient(email, password)
-    cookies = client.getSession()
-    with open("session.json", "w+") as f:
-        json.dump(cookies, f)
-    print('Cookies saved!')
+    # If it fails, never mind, we'll just login again
+    pass
+
+client = CustomClient(email, password, session_cookies=cookies)
+with open('session.json', 'w') as f:
+    json.dump(client.getSession(), f)
+
+
+
 
 print("\nProgram Started!\n")
 client.listen()
