@@ -5,6 +5,10 @@ import traceback
 import json
 from fbchat import Client
 from fbchat.models import *
+from fbchat import FBchatException, FBchatUserError
+
+start = time.time()
+end = 0
 
 
 email = 'randomemail1@yahoo.com' #Facebook Email
@@ -14,10 +18,59 @@ USE_TELEGRAM = True #Change to False if you don't want to use Telegram
 if USE_TELEGRAM == True:
     import telepot 
     bot = telepot.Bot('00000000:45h5t78574t45h7485th7857h45y45t78h45t') # Telegram Bot Token 
-    bot_chat_id = '111111111' # Your Telegram Chat ID. It can be a user's chat ID or a group's chat ID.  
+    bot_chat_id = '111111111' # Your Telegram Chat ID. It can be a user's chat ID or a group's chat ID.   
+    
+'''
+    def on_chat_message(msg):
+        global tfa_code
+        content_type, chat_type, chat_id = telepot.glance(msg)
+        if tfa_state == 1:
+            tfa_state == 0
+            tfa_code = msg['text']
+            print("2FA code: " + str(tfa_code))'''
+
+
+
+
+# client = CustomClient(email, password, session_cookies=cookies)
+
+
+
+
+
+def login_logout():
+    cookies = {}
+    try:
+        # Load the session cookies
+        if os.path.isfile('session.json'):
+            with open('session.json', 'r') as f:
+                cookies = json.load(f)
+    except:
+        os.remove('session.json')
+        # If it fails, never mind, we'll just login again
+        bot.sendMessage(bot_chat_id, "### ATTENTION ###\nManual Configuration Needed!\nPlease login to VPS terminal")
+        # client = CustomClient(email, password, max_tries=1)
+    if((not cookies) != True):
+        client = CustomClient(email, password, session_cookies=cookies, max_tries=1)
+    else:
+        bot.sendMessage(bot_chat_id, "Enter 2FA Code:")
+        client = CustomClient(email, password, max_tries=1)
+    
+    with open('session.json', 'w') as f:
+        json.dump(client.getSession(), f)
+
+    print("\nProgram Started!\n")
+    bot.sendMessage(bot_chat_id, "Program Started/Restarted!")
+
+    client.listen()
     
 
+        
+
+
+
 def writeLogs(content, threadName, date):
+    global start
 
     '''try:
         os.makedirs("message_logs/" + threadName)
@@ -59,7 +112,15 @@ def writeLogs(content, threadName, date):
         
     
     if USE_TELEGRAM == True:
-        bot.sendMessage(bot_chat_id, "### " + threadName + " ###" + "\n" + content) 
+        bot.sendMessage(bot_chat_id, "### " + threadName + " ###" + "\n" + content)
+
+    end = time.time()
+    if (end - start) > 43200:
+        start = time.time()
+        login_logout()
+
+        
+        
 
 def convertSeconds(seconds):
     hours = int(seconds / 3600)
@@ -130,6 +191,16 @@ def getMessageContent(self, t, messageObject):
 
 
 class CustomClient(Client):
+
+    '''if USE_TELEGRAM == True:
+        def on2FACode(self):
+            # global tfa_code
+            bot.sendMessage(bot_chat_id, "Enter Facebook 2FA Code -->")
+            return input("Enter Facebook 2FA Code: ")'''
+        
+
+
+
     def onMessage(self, author_id, message_object, thread_id, thread_type, ts, metadata, msg, **kwargs):
        # print(message_object.attachments)
         date = datetime.now()
@@ -451,22 +522,6 @@ class CustomClient(Client):
         
         writeLogs(time.ctime() + " | " + content, thread.name, date) # Checking Needed ***********************
 
+# MessageLoop(bot, on_chat_message).run_as_thread()
 
-cookies = {}
-try:
-    # Load the session cookies
-    with open('session.json', 'r') as f:
-        cookies = json.load(f)
-except:
-    # If it fails, never mind, we'll just login again
-    pass
-
-client = CustomClient(email, password, session_cookies=cookies)
-with open('session.json', 'w') as f:
-    json.dump(client.getSession(), f)
-
-
-
-
-print("\nProgram Started!\n")
-client.listen()
+login_logout()
