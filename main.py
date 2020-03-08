@@ -134,7 +134,7 @@ def convertSeconds(seconds):
 def getMessageContent(self, t, messageObject):
     #if len(message_object.attachments) != 0:
     print(messageObject)
-    if messageObject.text == None and messageObject.sticker == None:
+    if (messageObject.text == None or messageObject.text == '') and messageObject.sticker == None:
         for i in range(0, len(messageObject.attachments)):
             #print(messageObject.attachments[i].animated_preview_url)
             # If attachment is a temporary location.
