@@ -54,7 +54,8 @@ def login_logout():
     if((not cookies) != True):
         client = CustomClient(email, password, session_cookies=cookies, max_tries=1)
     else:
-        bot.sendMessage(bot_chat_id, "Enter 2FA Code:")
+        if USE_TELEGRAM == True:
+            bot.sendMessage(bot_chat_id, "Enter 2FA Code:")
         client = CustomClient(email, password, max_tries=1)
     
     with open('session.json', 'w') as f:
