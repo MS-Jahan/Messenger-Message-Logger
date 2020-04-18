@@ -48,7 +48,8 @@ def login_logout():
     except:
         os.remove('session.json')
         # If it fails, never mind, we'll just login again
-        bot.sendMessage(bot_chat_id, "### ATTENTION ###\nManual Configuration Needed!\nPlease login to VPS terminal")
+        if USE_TELEGRAM == True:
+            bot.sendMessage(bot_chat_id, "### ATTENTION ###\nManual Configuration Needed!\nPlease login to VPS terminal")
         # client = CustomClient(email, password, max_tries=1)
     if((not cookies) != True):
         client = CustomClient(email, password, session_cookies=cookies, max_tries=1)
@@ -60,7 +61,8 @@ def login_logout():
         json.dump(client.getSession(), f)
 
     print("\nProgram Started!\n")
-    bot.sendMessage(bot_chat_id, "Program Started/Restarted!")
+    if USE_TELEGRAM == True:
+        bot.sendMessage(bot_chat_id, "Program Started/Restarted!")
 
     client.listen()
     
