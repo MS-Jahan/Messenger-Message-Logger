@@ -1,3 +1,6 @@
+# [THIS THING ISN'T WORKING RIGHT NOW (fbchat module issue). USE IT IF YOU CAN DEBUG AND LET ME KNOW IF YOU CAN.]
+
+
 # Messenger-Message-Logger
 Logs Messenger messages, logs them on local storage and sends a copy via Telegram bot!
 
