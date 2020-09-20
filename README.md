@@ -1,4 +1,4 @@
-# [THIS THING ISN'T WORKING RIGHT NOW (fbchat module issue). USE IT IF YOU CAN DEBUG AND LET ME KNOW IF YOU CAN.]
+# [CODE CAN HAVE BUGS (As changes made to fbchat module). USE IT IF YOU CAN DEBUG AND LET ME KNOW IF YOU CAN.]
 
 
 # Messenger-Message-Logger
