@@ -15,7 +15,6 @@ import re
 fbchat._util.USER_AGENTS    = ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"]
 fbchat._state.FB_DTSG_REGEX = re.compile(r'"name":"fb_dtsg","value":"(.*?)"')
 
-
 email = 'randomemail1@yahoo.com' #Facebook Email
 password = 'zxxcqwer1234zx' #Facebook Password
 USE_TELEGRAM = True #Change to False if you don't want to use Telegram
@@ -35,13 +34,7 @@ if USE_TELEGRAM == True:
             print("2FA code: " + str(tfa_code))'''
 
 
-
-
 # client = CustomClient(email, password, session_cookies=cookies)
-
-
-
-
 
 def login_logout():
     cookies = {}
@@ -72,11 +65,6 @@ def login_logout():
 
     client.listen()
     
-
-        
-
-
-
 def writeLogs(content, threadName, date):
     global start
 
@@ -96,12 +84,9 @@ def writeLogs(content, threadName, date):
     except FileExistsError:
         pass
     
-    
     #os.makedirs("message_logs/" + threadName)
-    
     filename = "message_logs/" + threadName + "/" + str(date.day) + "_" + str(date.month) + "_" + str(date.year)
     
-
     if os.path.exists(filename):
         append_write = 'a' # append if already exists
         #content = "\n" + content
@@ -118,7 +103,6 @@ def writeLogs(content, threadName, date):
         #write_in = open(filename, append_write)
         write_in.close()
         
-    
     if USE_TELEGRAM == True:
         bot.sendMessage(bot_chat_id, "### " + threadName + " ###" + "\n" + content)
 
@@ -127,16 +111,12 @@ def writeLogs(content, threadName, date):
         start = time.time()
         login_logout()
 
-        
-        
-
 def convertSeconds(seconds):
     hours = int(seconds / 3600)
     minutes = int((seconds % 3600) / 60)
     seconds = (seconds % 3600) % 60
     formattedTime = "{} hours, {} minutes, {} seconds".format(hours, minutes, seconds)
     return formattedTime
-
 
 # for text, image, gif, attachment or sticker-type messages
 def getMessageContent(self, t, messageObject):
@@ -197,7 +177,6 @@ def getMessageContent(self, t, messageObject):
     
     return t
 
-
 class CustomClient(Client):
 
     '''if USE_TELEGRAM == True:
@@ -205,9 +184,6 @@ class CustomClient(Client):
             # global tfa_code
             bot.sendMessage(bot_chat_id, "Enter Facebook 2FA Code -->")
             return input("Enter Facebook 2FA Code: ")'''
-        
-
-
 
     def onMessage(self, author_id, message_object, thread_id, thread_type, ts, metadata, msg, **kwargs):
        # print(message_object.attachments)
@@ -218,9 +194,7 @@ class CustomClient(Client):
         #print("\n")
         #print(str(message_object) + "\n\n\n")
         #print(message_object.attachments[0].large_preview_url)
-        
         text = ''
-        
         text = getMessageContent(self, text, message_object)
         content = ''
         if message_object.replied_to != None:
@@ -235,10 +209,8 @@ class CustomClient(Client):
             writeLogs(time.ctime() + " | " + content, thread.name, date)
             #print("### " + thread.name + " ###" + "\n" + content)
         
-
     def onReactionAdded(self, mid, reaction, author_id, thread_id, thread_type, ts, msg, **kwargs):
         date = datetime.now()
-
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         x = self.fetchMessageInfo(mid, thread_id)
@@ -250,15 +222,12 @@ class CustomClient(Client):
         
         text = ''
         text = getMessageContent(self, text, x)
-        
-        
         content = "{} reacted {} to message * {}: {} *".format(user.name, reaction.name, y.name, text)
         #bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
         writeLogs(time.ctime() + " | " + content, thread.name, date)
         
     def onReactionRemoved(self, mid, author_id, thread_id, thread_type, ts, msg, **kwargs):
         date = datetime.now()
-
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         x = self.fetchMessageInfo(mid, thread_id)
@@ -278,7 +247,6 @@ class CustomClient(Client):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        
         content = "Conversation Theme was changed to {} by {}".format(new_color, user.name)
         writeLogs(time.ctime() + " | " + content, thread.name, date)
         
@@ -286,7 +254,6 @@ class CustomClient(Client):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        
         content = "Conversation Emoji was changed to {} by {}".format(new_emoji, user.name)
         writeLogs(time.ctime() + " | " + content, thread.name, date)
         
@@ -294,7 +261,6 @@ class CustomClient(Client):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        
         content = "Conversation Title was changed to '{}' by {}".format(new_title, user.name)
         writeLogs(time.ctime() + " | " + content, thread.name, date)
     
@@ -362,7 +328,7 @@ class CustomClient(Client):
             user0 = self.fetchUserInfo(added_ids[x])[added_ids[x]]
             user0 = user0.name
             added_member_names.append(user0)
-        
+            
         content = "{} added {} in {}".format(user.name, ", ".join(added_member_names), thread.name)
         writeLogs(time.ctime() + " | " + content, thread.name, date)
         
