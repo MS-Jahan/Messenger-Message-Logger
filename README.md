@@ -9,9 +9,10 @@ Logs Messenger messages, logs them on local storage and sends a copy via Telegra
 2. Install <code>python3-pip</code> in your linux distro using apt or the package manager you have (not for Windows).
 3. Run <code>pip3 install fbchat telepot --user</code>.
 4. Install git: <code>sudo apt install git</code> (for Ubuntu and Debian based. Command will differ for other distros. Not needed on Windows.)
-4. Clone this repository using <code>git clone https://github.com/MS-Jahan/Messenger-Message-Logger</code>. On Windows, just download the zip file and extract it.
-5. Change directory to repository folder from terminal or cmd: <code>cd Messenger-Message-Logger</code>.
-6. Now run: <code>python3 main.py</code>
+5. Run `git clone --single-branch --branch v1 https://github.com/MS-Jahan/fbchat.git`. You can delete other files and folders (cloned from my fbchat fork) except the `fbchat` folder. For Windows, you can just download the code (in zip file) for the code in branch v1.
+6. Clone this repository using <code>git clone https://github.com/MS-Jahan/Messenger-Message-Logger</code>. On Windows, just download the zip file and extract it.
+7. Change directory to repository folder from terminal or cmd: <code>cd Messenger-Message-Logger</code>.
+8. Now run: <code>python3 main.py</code>
 
 
 Logs when:
