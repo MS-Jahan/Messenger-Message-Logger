@@ -1,0 +1,11 @@
+aenum
+attrs
+beautifulsoup4
+certifi
+charset-normalizer
+idna
+paho-mqtt
+requests
+soupsieve
+urllib3
+telepota
