@@ -6,18 +6,20 @@ import json
 from fbchat import Client
 from fbchat.models import *
 from fbchat import FBchatException, FBchatUserError
+import onetimepass as otp
 
 start = time.time()
 end = 0
 
 import fbchat
 import re
-fbchat._util.USER_AGENTS    = ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"]
+fbchat._util.USER_AGENTS    = ["Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.61 Safari/537.36"]
 fbchat._state.FB_DTSG_REGEX = re.compile(r'"name":"fb_dtsg","value":"(.*?)"')
 
-email = 'randomemail1@yahoo.com' #Facebook Email
-password = 'zxxcqwer1234zx' #Facebook Password
-USE_TELEGRAM = True #Change to False if you don't want to use Telegram
+email = 'asdasdasd@sdsdf.com' # Facebook Email
+password = "ret4w34$@#$@#$#$" # Facebook Password
+otp_key = "3453453q453q4fgdfgsdf" # If 2fa is enabled. Otherwise, ignore.
+USE_TELEGRAM = False #Change to False if you don't want to use Telegram
 
 if USE_TELEGRAM == True:
     import telepot 
@@ -141,7 +143,8 @@ def getMessageContent(self, t, messageObject):
                 #t+= str(messageObject.attachments[i].animated_preview_url) + "\n\n"
                 #print("Gif               " +t)
                 # content = "{}: {}".format(user.name, str(messageObject.attachments[i].animated_preview_url))
-                # bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
+                # if USE_TELEGRAM == True:
+                #    bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
                 # writeLogs(time.ctime() + " | " + content, thread.name, date)
             # If normal image
             elif hasattr(messageObject.attachments[i], 'large_preview_url') and messageObject.attachments[i].large_preview_url != None:
@@ -170,6 +173,7 @@ def getMessageContent(self, t, messageObject):
         t = "\nSticker: " + get_url[index1:index2]
         #print(get_url[index1:index2])
         #content = "{}: {}".format(user.name,t)
+        #if USE_TELEGRAM == True:
         #bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
         #writeLogs(time.ctime() + " | " + content, thread.name, date)
     elif messageObject.text != None:
@@ -179,11 +183,28 @@ def getMessageContent(self, t, messageObject):
 
 class CustomClient(Client):
 
-    '''if USE_TELEGRAM == True:
-        def on2FACode(self):
-            # global tfa_code
-            bot.sendMessage(bot_chat_id, "Enter Facebook 2FA Code -->")
-            return input("Enter Facebook 2FA Code: ")'''
+    def on2FACode(self):
+        # global tfaCode
+        # global tfa_code
+        # try:
+        #     temp = int(tfaCode)
+        # except:
+        #     tfaCode = 0
+        if USE_TELEGRAM == True:
+            bot.sendMessage(chat_id, "Enter Facebook 2FA Code --> 22 seconds break")
+        # print('Enter Facebook 2FA Code-1234: ')
+        # while tfaCode == 0:
+        #     time.sleep(5)
+        time.sleep(2)
+        temp = "0000"
+        while(len(str(temp)) < 6):
+            print(temp)
+            temp = otp.get_totp(otp_key)
+            time.sleep(5)
+        # temp = tfaCode
+        # tfaCode = 0
+        print(temp)
+        return temp
 
     def onMessage(self, author_id, message_object, thread_id, thread_type, ts, metadata, msg, **kwargs):
        # print(message_object.attachments)
