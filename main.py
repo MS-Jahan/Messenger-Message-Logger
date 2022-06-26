@@ -243,7 +243,7 @@ class CustomClient(Client):
         
         text = ''
         text = getMessageContent(self, text, x)
-        content = "{} reacted {} to message * {}: {} *".format(user.name, reaction.name, y.name, text)
+        content = "{} reacted {} to message * {}: {} *".format(user.name, reaction, y.name, text)
         #bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
         writeLogs(time.ctime() + " | " + content, thread.name, date)
         
