@@ -7,6 +7,7 @@ from fbchat import Client
 from fbchat.models import *
 from fbchat import FBchatException, FBchatUserError
 import onetimepass as otp
+import string
 
 start = time.time()
 end = 0
@@ -37,6 +38,10 @@ if USE_TELEGRAM == True:
 
 
 # client = CustomClient(email, password, session_cookies=cookies)
+
+def valid_file_name(filename:str):
+    valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+    return ''.join(c for c in filename if c in valid_chars)
 
 def login_logout():
     cookies = {}
@@ -82,12 +87,12 @@ def writeLogs(content, threadName, date):
         threadName = "UNTITLED"
     
     try:
-        os.makedirs("message_logs/" + threadName)
+        os.makedirs("message_logs/" + valid_file_name(threadName))
     except FileExistsError:
         pass
     
     #os.makedirs("message_logs/" + threadName)
-    filename = "message_logs/" + threadName + "/" + str(date.day) + "_" + str(date.month) + "_" + str(date.year)
+    filename = "message_logs/" + valid_file_name(threadName) + "/" + str(date.day) + "_" + str(date.month) + "_" + str(date.year)
     
     if os.path.exists(filename):
         append_write = 'a' # append if already exists
