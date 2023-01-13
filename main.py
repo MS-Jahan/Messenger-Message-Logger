@@ -148,16 +148,16 @@ def getMessageContent(self, t, messageObject):
             # If attachment is a temporary location.
             if hasattr(messageObject.attachments[i], 'latitude') and hasattr(messageObject.attachments[i], 'expiration_time'):
                 url = "https://www.google.com/maps/place/" + str(messageObject.attachments[i].latitude) + "," + str(messageObject.attachments[i].longitude)
-                t += "\nLive Location valid for " + convertSeconds(messageObject.attachment[i].expiration_time) + ": " + url
+                t += "\nLive Location valid for " + convertSeconds(messageObject.attachment[i].expiration_time) + ": " + url + "\n\n"
             # If attachment is just a pinned location.
             elif hasattr(messageObject.attachments[i], 'latitude') and hasattr(messageObject.attachments[i], 'longitude'):
                 url = "https://www.google.com/maps/place/" + str(messageObject.attachments[i].latitude) + "," + str(messageObject.attachments[i].longitude)
-                t += "\nPinned Location: " + url    
+                t += "\nPinned Location: " + url + "\n\n"
             # If gif
             elif hasattr(messageObject.attachments[i], 'animated_preview_url') and messageObject.attachments[i].animated_preview_url != None:
                 #if messageObject.attachments[i].animated_preview_url != None: #If gif
                 url = self.fetchImageUrl(messageObject.attachments[i].uid)
-                t += "\nGif: " + url
+                t += "\nGif: " + url + "\n\n"
                 #t+= str(messageObject.attachments[i].animated_preview_url) + "\n\n"
                 #print("Gif               " +t)
                 # content = "{}: {}".format(user.name, str(messageObject.attachments[i].animated_preview_url))
@@ -168,7 +168,7 @@ def getMessageContent(self, t, messageObject):
             elif hasattr(messageObject.attachments[i], 'large_preview_url') and messageObject.attachments[i].large_preview_url != None:
                 #elif messageObject.attachments[i].large_preview_url != None: #If normal image
                 url = self.fetchImageUrl(messageObject.attachments[i].uid)
-                t += "\nImage: " + url
+                t += "\nImage: " + url + "\n\n"
                 #t+= str(messageObject.attachments[i].large_preview_url) + "\n\n"
                 #print("Image               " +t)
             # If file attachment
@@ -180,7 +180,7 @@ def getMessageContent(self, t, messageObject):
             # If video
             elif hasattr(messageObject.attachments[i], 'preview_url') and messageObject.attachments[i].preview_url != None:
                 url = messageObject.attachments[i].preview_url
-                t += "\nVideo: " + url
+                t += "\nVideo: " + url + "\n\n"
     
     # Checking if it is sticker (like button or usual sticker)
     elif messageObject.sticker != None:
@@ -188,7 +188,7 @@ def getMessageContent(self, t, messageObject):
         index1 = get_url.find("url")
         index1 += 5
         index2 = get_url.find("', width=")
-        t = "\nSticker: " + get_url[index1:index2]
+        t = "\nSticker: " + get_url[index1:index2] + "\n\n"
         #print(get_url[index1:index2])
         #content = "{}: {}".format(user.name,t)
         #if USE_TELEGRAM == True:
@@ -240,10 +240,10 @@ class CustomClient(Client):
             reply = message_object.replied_to
             replied_to = self.fetchUserInfo(reply.author)[reply.author]
             text1 = ''
-            content += "<b>{}</b> has replied to <b>{}</b>'s message, <i>{}</i>\nReply: <pre>{}</pre>".format(user.name, replied_to.name, getMessageContent(self, text1, reply), text)
+            content += "<b>{}</b> has replied to <b>{}</b>'s message, <i>{}</i>\n<b>Reply</b>: {}".format(user.name, replied_to.name, getMessageContent(self, text1, reply), text)
             writeLogs(content, thread.name, date)
         else:
-            content += "<b>{}</b>: <pre>{}</pre>".format(user.name, text)
+            content += "<b>{}</b>: {}".format(user.name, text)
             #bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
             writeLogs(content, thread.name, date)
             #print("### " + thread.name + " ###" + "\n" + content)
