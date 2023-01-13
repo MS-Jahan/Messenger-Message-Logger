@@ -8,24 +8,17 @@ from fbchat.models import *
 from fbchat import FBchatException, FBchatUserError
 import onetimepass as otp
 import string
+import threading
 
 start = time.time()
 end = 0
+threads = []
 
 import fbchat
 import re
 fbchat._util.USER_AGENTS    = ["Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.61 Safari/537.36"]
 fbchat._state.FB_DTSG_REGEX = re.compile(r'"name":"fb_dtsg","value":"(.*?)"')
-
-email = 'asdasdasd@sdsdf.com' # Facebook Email
-password = "ret4w34$@#$@#$#$" # Facebook Password
-otp_key = "3453453q453q4fgdfgsdf" # If 2fa is enabled. Otherwise, ignore.
-USE_TELEGRAM = False #Change to False if you don't want to use Telegram
-
-if USE_TELEGRAM == True:
-    import telepot 
-    bot = telepot.Bot('00000000:45h5t78574t45h7485th7857h45y45t78h45t') # Telegram Bot Token 
-    bot_chat_id = '111111111' # Your Telegram Chat ID. It can be a user's chat ID or a group's chat ID.   
+from config import *
     
 '''
     def on_chat_message(msg):
@@ -43,7 +36,7 @@ def valid_file_name(filename:str):
     valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
     return ''.join(c for c in filename if c in valid_chars)
 
-def login_logout():
+def login_logout(keepLooping=True, session_time=12*60*60):
     cookies = {}
     try:
         # Load the session cookies
@@ -70,10 +63,37 @@ def login_logout():
     if USE_TELEGRAM == True:
         bot.sendMessage(bot_chat_id, "Program Started/Restarted!")
 
-    client.listen()
+    client.custom_listen()
+    while client.listening and client.doOneListen():
+        global end, start
+        end = time.time()
+        if (end - start) > session_time:
+            client.stopListening()
+            time.sleep(5)
+            break
     
+    if keepLooping:
+        start = time.time()
+        login_logout(keepLooping=keepLooping, session_time=session_time)
+
+def tg_send_message(bot_chat_id, message, disable_notification=True):
+    try:
+        bot.sendMessage(bot_chat_id, message, parse_mode="HTML", disable_notification=disable_notification)     
+    except:
+        bot.sendMessage(bot_chat_id, message, disable_notification=disable_notification) 
+ 
 def writeLogs(content, threadName, date):
     global start
+
+    if USE_TELEGRAM == True:
+        reply = "<b><u>" + threadName + "</u></b>" + "\n" + content
+        thread = threading.Thread(
+            target=tg_send_message,
+            args=(bot_chat_id, reply, )
+        )
+        thread.start()
+    
+    content = str(time.ctime()) + " | " + content
 
     '''try:
         os.makedirs("message_logs/" + threadName)
@@ -109,14 +129,7 @@ def writeLogs(content, threadName, date):
             write_in.write(content + "\n")
         #write_in = open(filename, append_write)
         write_in.close()
-        
-    if USE_TELEGRAM == True:
-        bot.sendMessage(bot_chat_id, "### " + threadName + " ###" + "\n" + content)
 
-    end = time.time()
-    if (end - start) > 43200:
-        start = time.time()
-        login_logout()
 
 def convertSeconds(seconds):
     hours = int(seconds / 3600)
@@ -150,7 +163,7 @@ def getMessageContent(self, t, messageObject):
                 # content = "{}: {}".format(user.name, str(messageObject.attachments[i].animated_preview_url))
                 # if USE_TELEGRAM == True:
                 #    bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
-                # writeLogs(time.ctime() + " | " + content, thread.name, date)
+                # writeLogs(content, thread.name, date)
             # If normal image
             elif hasattr(messageObject.attachments[i], 'large_preview_url') and messageObject.attachments[i].large_preview_url != None:
                 #elif messageObject.attachments[i].large_preview_url != None: #If normal image
@@ -180,7 +193,7 @@ def getMessageContent(self, t, messageObject):
         #content = "{}: {}".format(user.name,t)
         #if USE_TELEGRAM == True:
         #bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
-        #writeLogs(time.ctime() + " | " + content, thread.name, date)
+        #writeLogs(content, thread.name, date)
     elif messageObject.text != None:
         t = messageObject.text
     
@@ -196,7 +209,7 @@ class CustomClient(Client):
         # except:
         #     tfaCode = 0
         if USE_TELEGRAM == True:
-            bot.sendMessage(chat_id, "Enter Facebook 2FA Code --> 22 seconds break")
+            bot.sendMessage(bot_chat_id, "Enter Facebook 2FA Code --> 22 seconds break")
         # print('Enter Facebook 2FA Code-1234: ')
         # while tfaCode == 0:
         #     time.sleep(5)
@@ -227,12 +240,12 @@ class CustomClient(Client):
             reply = message_object.replied_to
             replied_to = self.fetchUserInfo(reply.author)[reply.author]
             text1 = ''
-            content += "{} has replied to {}'s message, \"{}\"\nReply: {}".format(user.name, replied_to.name, getMessageContent(self, text1, reply), text)
-            writeLogs(time.ctime() + " | " + content, thread.name, date)
+            content += "<b>{}</b> has replied to <b>{}</b>'s message, <i>{}</i>\nReply: <pre>{}</pre>".format(user.name, replied_to.name, getMessageContent(self, text1, reply), text)
+            writeLogs(content, thread.name, date)
         else:
-            content += "*{}*: {}".format(user.name, text)
+            content += "<b>{}</b>: <pre>{}</pre>".format(user.name, text)
             #bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
-            writeLogs(time.ctime() + " | " + content, thread.name, date)
+            writeLogs(content, thread.name, date)
             #print("### " + thread.name + " ###" + "\n" + content)
         
     def onReactionAdded(self, mid, reaction, author_id, thread_id, thread_type, ts, msg, **kwargs):
@@ -248,9 +261,9 @@ class CustomClient(Client):
         
         text = ''
         text = getMessageContent(self, text, x)
-        content = "{} reacted {} to message * {}: {} *".format(user.name, reaction, y.name, text)
+        content = "<b>{}</b> reacted <i>{}</i> to message\n  <b>{}</b>: <i>{}</i> ".format(user.name, reaction, y.name, text)
         #bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        writeLogs(content, thread.name, date)
         
     def onReactionRemoved(self, mid, author_id, thread_id, thread_type, ts, msg, **kwargs):
         date = datetime.now()
@@ -265,62 +278,62 @@ class CustomClient(Client):
         text = ''
         text = getMessageContent(self, text, x)
         #print(msg)
-        content = "{} removed reaction of message * {}: {} *".format(user.name, y.name, text)
+        content = "<b>{}</b> removed reaction of message\n  <b>{}</b>: <i>{}</i> ".format(user.name, y.name, text)
         #bot.sendMessage(bot_chat_id, "### " + thread.name + " ###" + "\n" + content) 
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        writeLogs(content, thread.name, date)
         
     def onColorChange( self, mid, author_id, new_color, thread_id, thread_type, ts, metadata, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        content = "Conversation Theme was changed to {} by {}".format(new_color, user.name)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "Conversation Theme was changed to <i>{}</i> by <b>{}</b>".format(new_color, user.name)
+        writeLogs(content, thread.name, date)
         
     def onEmojiChange(self, mid, author_id, new_emoji, thread_id, thread_type, ts, metadata, msg, **kwargs):  
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        content = "Conversation Emoji was changed to {} by {}".format(new_emoji, user.name)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "Conversation Emoji was changed to <i>{}</i> by <b>{}</b>".format(new_emoji, user.name)
+        writeLogs(content, thread.name, date)
         
     def onTitleChange(self, mid, author_id, new_title, thread_id, thread_type, ts, metadata, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        content = "Conversation Title was changed to '{}' by {}".format(new_title, user.name)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "Conversation Title was changed to <i>{}</i> by <b>{}</b>".format(new_title, user.name)
+        writeLogs(content, thread.name, date)
     
     def onImageChange(self, mid, author_id, new_image, thread_id, thread_type, ts, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         url = self.fetchImageUrl(new_image)
-        content = "Conversation Image was changed by {}. Link: {}".format(user.name, url)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "Conversation Image was changed by <b>{}</b>. Link: {}".format(user.name, url)
+        writeLogs(content, thread.name, date)
     
     def onNicknameChange(self, mid, author_id, changed_for, new_nickname, thread_id, thread_type, ts, metadata, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         changed_nick = self.fetchUserInfo(changed_for)[changed_for]
-        content = "{} changed nickname of {} to '{}'".format(user.name, changed_nick.name, new_nickname)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = " <b>{}</b> changed nickname of <b>{}</b> to <b><u>{}</u></b>".format(user.name, changed_nick.name, new_nickname)
+        writeLogs(content, thread.name, date)
     
     def onAdminAdded(self, mid, added_id, author_id, thread_id, thread_type, ts, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         being_added = self.fetchUserInfo(added_id)[added_id]
-        content = "{} added {} as an Admin.".format(user.name, being_added.name)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "<b>{}</b> added <b>{}</b> as an Admin.".format(user.name, being_added.name)
+        writeLogs(content, thread.name, date)
         
     def onAdminRemoved(self, mid, removed_id, author_id, thread_id, thread_type, ts, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         being_removed = self.fetchUserInfo(removed_id)[removed_id]
-        content = "{} removed {} as an Admin.".format(user.name, being_removed.name)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "<b>{}</b> removed <b>{}</b> as an Admin.".format(user.name, being_removed.name)
+        writeLogs(content, thread.name, date)
     
     def onApprovalModeChange(self, mid, approval_mode, author_id, thread_id, thread_type, ts, msg, **kwargs):    
         date = datetime.now()
@@ -328,11 +341,11 @@ class CustomClient(Client):
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         
         if approval_mode:
-            content = "{} activated Require Admin Approval mode.".format(user.name)
+            content = "<b>{}</b> activated Require Admin Approval mode.".format(user.name)
         else:
-            content = "{} deactivated Require Admin Approval mode.".format(user.name)
+            content = "<b>{}</b> deactivated Require Admin Approval mode.".format(user.name)
         
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        writeLogs(content, thread.name, date)
         
     '''def onMessageSeen(self, seen_by, thread_id, thread_type, seen_ts, ts, metadata, msg, **kwags):
         if thread_type != ThreadType.GROUP:
@@ -341,7 +354,7 @@ class CustomClient(Client):
                 user = self.fetchUserInfo(seen_by)[seen_by]
                 thread = self.fetchThreadInfo(thread_id)[thread_id]
                 content = "Message was seen by {}".format(user.name)
-                writeLogs(time.ctime() + " | " + content, thread.name, date)
+                writeLogs(content, thread.name, date)
                 print("On message seen, metadata: " + str(metadata))'''
             
     def onPeopleAdded(self, mid, added_ids, author_id, thread_id, ts, msg):
@@ -355,26 +368,26 @@ class CustomClient(Client):
             user0 = user0.name
             added_member_names.append(user0)
             
-        content = "{} added {} in {}".format(user.name, ", ".join(added_member_names), thread.name)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "<b>{}</b> added <b>{}</b> in <b>{}</b>".format(user.name, ", ".join(added_member_names), thread.name)
+        writeLogs(content, thread.name, date)
         
     def onPersonRemoved(self, mid, removed_id, author_id, thread_id, ts, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         being_removed = self.fetchUserInfo(removed_id)[removed_id]
-        content = "{} removed {} from group.".format(user.name, being_removed.name)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "<b>{}</b> removed <b>{}</b> from group.".format(user.name, being_removed.name)
+        writeLogs(content, thread.name, date)
         
     def onFriendRequest(self, from_id, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(from_id)[str(from_id)]
         #print(from_id)
         #print(user)
-        content = "Friend request from {}".format(user.name)
+        content = "Friend request from <b>{}</b>".format(user.name)
         #print(content)
         threadName = 'Friend Request'
-        writeLogs(time.ctime() + " | " + content, threadName, date)
+        writeLogs(content, threadName, date)
         
     '''def onInbox(self, unseen, unread, recent_unread, msg, **kwargs):
         print(unseen)
@@ -383,7 +396,7 @@ class CustomClient(Client):
         print(msg)'''
         
     def onInbox(self, unseen, unread, recent_unread, msg, **kwargs):
-        thread = self.fetchThreadList(self, limit=1, thread_location=models.ThreadLocation.PENDING)[0]
+        thread = self.fetchThreadList(self, limit=1, thread_location=ThreadLocation.PENDING)[0]
         msg = self.fetchThreadMessages(thread_id=thread.uid, limit=1)[0]
         #print(thread, msg)
         if not msg.is_read:
@@ -396,31 +409,31 @@ class CustomClient(Client):
                 user = self.fetchUserInfo(author_id)[author_id]
                 thread = self.fetchThreadInfo(thread_id)[thread_id]
                 print(status)
-                content = "{}'s current typing status: {}.".format(user.name, status.name)
-                writeLogs(time.ctime() + " | " + content, thread.name, date)
+                content = "<b>{}</b>'s current typing status: <i>{}</i>.".format(user.name, status.name)
+                writeLogs(content, thread.name, date)
         
     def onGamePlayed(self, mid, author_id, game_id, game_name, score, leaderboard, thread_id, thread_type, ts, metadata, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         print(user.name, score, game_name, leaderboard, msg) # Need rechecking *********************************
-        content = "{} scored {} in {}. Leaderboard: {}".format(user.name, score, game_name, leaderboard)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "<b>{}</b> scored <b>{}</b> in <b>{}</b>. Leaderboard: {}".format(user.name, score, game_name, leaderboard)
+        writeLogs(content, thread.name, date)
         
     def onBlock(self, author_id, thread_id, thread_type, ts, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         #print(author_id, thread_id)
-        content = "{} blocked you.".format(user.name)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "<b>{}</b> blocked you.".format(user.name)
+        writeLogs(content, thread.name, date)
         
     def onUnblock(self, author_id, thread_id, thread_type, ts, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        content = "{} unblocked you.".format(user.name)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "<b>{}</b> unblocked you.".format(user.name)
+        writeLogs(content, thread.name, date)
     
     def onLiveLocation(self, mid, location, author_id, thread_id, thread_type, ts, msg, **kwargs):
         date = datetime.now()
@@ -428,8 +441,8 @@ class CustomClient(Client):
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         print(location)
         print(msg)
-        content = "{} shared a location: {}.".format(user.name, location.url)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "<b>{}</b> shared a location: {}.".format(user.name, location.url)
+        writeLogs(content, thread.name, date)
         
     def onCallStarted(self, mid, caller_id, is_video_call, thread_id, thread_type, ts, metadata, msg, **kwargs):
         if thread_type == ThreadType.GROUP:
@@ -438,11 +451,11 @@ class CustomClient(Client):
             thread = self.fetchThreadInfo(thread_id)[thread_id]
             
             if is_video_call:
-                content = "{} started a video call.".format(user.name)
+                content = "<b>{}</b> started a video call.".format(user.name)
             else:
-                content = "{} started an audio call.".format(user.name)
+                content = "<b>{}</b> started an audio call.".format(user.name)
                 
-            writeLogs(time.ctime() + " | " + content, thread.name, date)
+            writeLogs(content, thread.name, date)
         
     def onCallEnded(self, mid, caller_id, is_video_call, call_duration, thread_id, thread_type, ts, metadata, msg, **kwargs):
         if thread_type == ThreadType.GROUP:
@@ -451,11 +464,11 @@ class CustomClient(Client):
             thread = self.fetchThreadInfo(thread_id)[thread_id]
             
             if is_video_call:
-                content = "{} ended the video call. Call Duration: {}.".format(user.name, convertSeconds(call_duration))
+                content = "<b>{}</b> ended the video call. Call Duration: {}.".format(user.name, convertSeconds(call_duration))
             else:
-                content = "{} ended the audio call. Call Duration: {}.".format(user.name, convertSeconds(call_duration))
+                content = "<b>{}</b> ended the audio call. Call Duration: {}.".format(user.name, convertSeconds(call_duration))
                 
-            writeLogs(time.ctime() + " | " + content, thread.name, date)
+            writeLogs(content, thread.name, date)
         
     def onUserJoinedCall(self, mid, joined_id, is_video_call, thread_id, thread_type, ts, metadata, msg, **kwargs):
         if thread_type == ThreadType.GROUP:
@@ -464,63 +477,63 @@ class CustomClient(Client):
             thread = self.fetchThreadInfo(thread_id)[thread_id]
             
             if is_video_call:
-                content = "{} joined the video call.".format(user.name)
+                content = "<b>{}</b> joined the video call.".format(user.name)
             else:
-                content = "{} joined the audio call.".format(user.name)
+                content = "<b>{}</b> joined the audio call.".format(user.name)
             
-            writeLogs(time.ctime() + " | " + content, thread.name, date)    
+            writeLogs(content, thread.name, date)    
     
     def onPollCreated(self, mid, poll, author_id, thread_id, thread_type, ts, metadata, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        content = "{} has created a poll named '{}' containg {} options: {}.".format(user.name, poll.title, poll.options_count, poll.options)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "<b>{}</b> has created a poll named <b>{}</b> containg <b>{}</b> options: {}.".format(user.name, poll.title, poll.options_count, poll.options)
+        writeLogs(content, thread.name, date)
         
     def onPollVoted(self, mid, poll, added_options, removed_options, author_id, thread_id, thread_type, ts, metadata, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        content = "{} has voted on the poll '{}' containg {} options: {}.\nAdded Options: {}.\nRemoved Options: {}.".format(user.name, poll.title, poll.options_count, poll.options, added_options, removed_options)
-        writeLogs(time.ctime() + " | " + content, thread.name, date)
+        content = "<b>{}</b> has voted on the poll <b>{}</b> containg <b>{}</b> options: {}.\nAdded Options: {}.\nRemoved Options: {}.".format(user.name, poll.title, poll.options_count, poll.options, added_options, removed_options)
+        writeLogs(content, thread.name, date)
     
     def onPlanCreated(self, mid, plan, author_id, thread_id, thread_type, ts, metadata, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        content = "{} has created a plan named '{}'. \nPlan Details: {}.".format(user.name, plan.name, plan)
-        writeLogs(time.ctime() + " | " + content, thread.name, date) # Checking Needed ***********************
+        content = "<b>{}</b> has created a plan named <b>{}</b>. \nPlan Details: {}.".format(user.name, plan.name, plan)
+        writeLogs(content, thread.name, date) # Checking Needed ***********************
 
     def onPlanEnded(self, mid, plan, thread_id, thread_type, ts, metadata, msg, **kwargs):
         date = datetime.now()
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        content = "Plan '{}' was ended. \nPlan Details: {}.".format(plan.title, plan)
-        writeLogs(time.ctime() + " | " + content, thread.name, date) # Checking Needed ***********************
+        content = "Plan <b>{}</b> was ended. \nPlan Details: {}.".format(plan.title, plan)
+        writeLogs(content, thread.name, date) # Checking Needed ***********************
         
     def onPlanEdited(self, mid, plan, author_id, thread_id, thread_type, ts, metadata, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        content = "Plan '{}' was edited by {}. \nPlan Details: {}.".format(plan.title, user.name, plan)
-        writeLogs(time.ctime() + " | " + content, thread.name, date) # Checking Needed ***********************
+        content = "Plan <b>{}</b> was edited by <b>{}</b>. \nPlan Details: {}.".format(plan.title, user.name, plan)
+        writeLogs(content, thread.name, date) # Checking Needed ***********************
         
     def onPlanDeleted(self, mid, plan, author_id, thread_id, thread_type, ts, metadata, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
-        content = "Plan '{}' was deleted by {}. \nPlan Details: {}.".format(plan.title, user.name, plan)
-        writeLogs(time.ctime() + " | " + content, thread.name, date) # Checking Needed ***********************
+        content = "Plan <b>{}</b> was deleted by <b>{}</b>. \nPlan Details: {}.".format(plan.title, user.name, plan)
+        writeLogs(content, thread.name, date) # Checking Needed ***********************
         
     def onPlanParticipation(self, mid, plan, take_part, author_id, thread_id, thread_type, ts, metadata, msg, **kwargs):
         date = datetime.now()
         user = self.fetchUserInfo(author_id)[author_id]
         thread = self.fetchThreadInfo(thread_id)[thread_id]
         if take_part:
-            content = "{} agreed to take part in the plan '{}'.".format(user.name, plan.title)
+            content = "<b>{}</b> agreed to take part in the plan <b>{}</b>.".format(user.name, plan.title)
         else:
-            content = "{} disagreed to take part in the plan '{}'.".format(user.name, plan.title)
+            content = "<b>{}</b> disagreed to take part in the plan <b>{}</b>.".format(user.name, plan.title)
         
-        writeLogs(time.ctime() + " | " + content, thread.name, date) # Checking Needed ***********************
+        writeLogs(content, thread.name, date) # Checking Needed ***********************
 
 # MessageLoop(bot, on_chat_message).run_as_thread()
 

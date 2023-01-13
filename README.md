@@ -2,7 +2,7 @@
 Logs Messenger messages, logs them on local storage and sends a copy via Telegram bot!
 
 # Before Getting Started
-*Enter your email, password, telegram chat ID and bot ID in the main.py file. 
+*Enter your email, password, telegram chat ID and bot ID in the `config.py` file. 
 
 # Installation & Usage
 1. Install Python 3 in your machine.
