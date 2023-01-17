@@ -347,15 +347,15 @@ class CustomClient(Client):
         
         writeLogs(content, thread.name, date)
         
-    '''def onMessageSeen(self, seen_by, thread_id, thread_type, seen_ts, ts, metadata, msg, **kwags):
+    def onMessageSeen(self, seen_by, thread_id, thread_type, seen_ts, ts, metadata, msg, **kwags):
         if thread_type != ThreadType.GROUP:
             if seen_by != self.uid:
                 date = datetime.now()
                 user = self.fetchUserInfo(seen_by)[seen_by]
                 thread = self.fetchThreadInfo(thread_id)[thread_id]
-                content = "Message was seen by {}".format(user.name)
+                content = "Message was seen by <b>{}</b>".format(user.name)
                 writeLogs(content, thread.name, date)
-                print("On message seen, metadata: " + str(metadata))'''
+                print("On message seen, metadata: " + str(metadata))
             
     def onPeopleAdded(self, mid, added_ids, author_id, thread_id, ts, msg):
         date = datetime.now()
@@ -537,4 +537,14 @@ class CustomClient(Client):
 
 # MessageLoop(bot, on_chat_message).run_as_thread()
 
-login_logout()
+retry = 0
+while retry < 5:
+    try:
+        login_logout()
+    except:
+        retry += 1
+        print("Login Failed. Retrying...")
+        with open("error.txt", "a+") as f:
+            f.write(str(time.ctime()) + " | " + str(traceback.format_exc()))
+        time.sleep(5)
+        continue
