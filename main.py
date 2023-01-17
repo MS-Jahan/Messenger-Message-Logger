@@ -36,7 +36,7 @@ def valid_file_name(filename:str):
     valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
     return ''.join(c for c in filename if c in valid_chars)
 
-def login_logout(keepLooping=True, session_time=12*60*60):
+def login_logout(keepLooping=True, session_time=1*60*60):
     cookies = {}
     try:
         # Load the session cookies
@@ -125,7 +125,7 @@ def writeLogs(content, threadName, date):
         #write_in = open(filename, append_write)
         write_in.close()
     except FileNotFoundError:
-        with open(filename, mode = w, encoding='utf8') as write_in:
+        with open(filename, mode = append_write, encoding='utf8') as write_in:
             write_in.write(content + "\n")
         #write_in = open(filename, append_write)
         write_in.close()
