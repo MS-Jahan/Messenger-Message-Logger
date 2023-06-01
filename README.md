@@ -1,3 +1,8 @@
+# ⚠️ Warning ⚠️
+Currently logging in from the script doesn't work 99% of the time. You have to copy the browser cookies from the browser and put that in a json file. More details are [here](https://github.com/MS-Jahan/Messenger-Message-Logger/issues/7#issuecomment-1086722859).
+
+<b>Also, I'll not be responsible if your account gets blocked or deleted. USE AT YOUR OWN RISK!</b>
+
 # Messenger-Message-Logger
 Logs Messenger messages, logs them on local storage and sends a copy via Telegram bot!
 
@@ -11,8 +16,9 @@ Logs Messenger messages, logs them on local storage and sends a copy via Telegra
 4. Install git: <code>sudo apt install git</code> (for Ubuntu and Debian based. Command will differ for other distros. Not needed on Windows.)
 5. Run `git clone --single-branch --branch v1 https://github.com/MS-Jahan/fbchat.git`. You can delete other files and folders (cloned from my fbchat fork) except the `fbchat` folder. For Windows, you can just download the code (in zip file) for the code in branch v1.
 6. Clone this repository using <code>git clone https://github.com/MS-Jahan/Messenger-Message-Logger</code>. On Windows, just download the zip file and extract it.
-7. Change directory to repository folder from terminal or cmd: <code>cd Messenger-Message-Logger</code>.
-8. Now run: <code>python3 main.py</code>
+7. Now copy the previous `fbchat` folder to the `Messenger-Message-Logger` folder where the `main.py` file is.
+8. Open cmd/terminal and change directory to repository folder: <code>cd Messenger-Message-Logger</code>. <i>(for example)</i>
+9. Now run: <code>python3 main.py</code>
 
 
 Logs when:
